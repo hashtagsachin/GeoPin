@@ -13,19 +13,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>geopin</name>
 	<description>Location based bookmarking application</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
@@ -54,6 +41,21 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		
+		<!-- Hibernate Spatial for geographic data -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-spatial</artifactId>
+			<version>6.4.1.Final</version>
+		</dependency>
+		
+		<!-- JTS Topology Suite for geometric operations -->
+		<dependency>
+			<groupId>org.locationtech.jts</groupId>
+			<artifactId>jts-core</artifactId>
+			<version>1.19.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
