@@ -51,7 +51,7 @@ public interface POIRepository extends JpaRepository<POI, Long> {
      * 
      * @param southWest The bottom-left corner of the bounding box
      * @param northEast The top-right corner of the bounding box
-     * @return List of POIs within the bounding box
+     * @return List of POIs within the bounding boxx ok
      */
     @Query(value = "SELECT p.* FROM poi p WHERE ST_Within(" +
            "p.location, ST_MakeEnvelope(" +
