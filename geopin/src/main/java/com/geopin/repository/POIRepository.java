@@ -37,7 +37,7 @@ public interface POIRepository extends JpaRepository<POI, Long> {
      * @param distanceInMeters The search radius in meters
      * @return List of POIs within the specified distance
      */
-    @Query(value = "SELECT p.* FROM poi p WHERE ST_DWithin(" +
+    @Query(value = "SELECT p.* FROM pois p WHERE ST_DWithin(" +
            "p.location, :location, :distanceInMeters, true)", 
            nativeQuery = true)
     List<POI> findPOIsWithinDistance(
@@ -53,7 +53,7 @@ public interface POIRepository extends JpaRepository<POI, Long> {
      * @param northEast The top-right corner of the bounding box
      * @return List of POIs within the bounding boxx ok
      */
-    @Query(value = "SELECT p.* FROM poi p WHERE ST_Within(" +
+    @Query(value = "SELECT p.* FROM pois p WHERE ST_Within(" +
            "p.location, ST_MakeEnvelope(" +
            "ST_X(:southWest), ST_Y(:southWest), " +
            "ST_X(:northEast), ST_Y(:northEast), 4326))",
