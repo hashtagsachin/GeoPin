@@ -8,7 +8,8 @@ const PinMarker = ({ marker, onSelect }) => {
       position={marker.position}
       draggable={true}
       onClick={() => onSelect(marker)}
-      // You can add custom icon and animation properties here
     />
   );
 };
+
+export default PinMarker;  // Added export

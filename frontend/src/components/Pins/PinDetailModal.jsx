@@ -1,9 +1,9 @@
-// PinDetailModal.jsx - Marker information display
-import React from 'react';
-import { Modal } from '../shared/Modal'; // You'll need to create this
+// PinDetailModal.jsx
+import React, { useState } from 'react';
+import Modal from '../shared/Modal';
 
 const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     name: marker.name || '',
     notes: marker.notes || '',
     tags: marker.tags || []
@@ -31,15 +31,13 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
           onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
           placeholder="Notes"
         />
-        {/* Add tag input interface here */}
-        
         <div className="button-group">
           <button type="submit">Save</button>
-          <button type="button" onClick={() => onDelete(marker.id)}>
-            Delete
-          </button>
+          <button type="button" onClick={() => onDelete(marker.id)}>Delete</button>
         </div>
       </form>
     </Modal>
   );
 };
+
+export default PinDetailModal;

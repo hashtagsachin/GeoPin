@@ -1,25 +1,21 @@
-// MapControls.jsx - Map control interface
+// MapControls.jsx
 import React from 'react';
-import { defaultMapOptions } from '../../services/mapService';
 
-const MapControls = ({ map }) => {
-  // This component will handle the long-press logic that's currently in MapComponent
+const MapControls = ({ map, onMarkerAdd }) => {
   const [longPressTimer, setLongPressTimer] = React.useState(null);
 
   const handleMouseDown = React.useCallback((e) => {
     const timer = setTimeout(() => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      // Emit event to parent component
       onMarkerAdd({ lat, lng });
     }, 500);
     setLongPressTimer(timer);
   }, [onMarkerAdd]);
 
   React.useEffect(() => {
-    if (!map) return;
+    if (!map || !window.google) return;
     
-    // Set up map event listeners
     map.addListener('mousedown', handleMouseDown);
     map.addListener('mouseup', () => {
       if (longPressTimer) {
@@ -29,13 +25,14 @@ const MapControls = ({ map }) => {
     });
 
     return () => {
-      // Clean up listeners when component unmounts
-      if (map) {
-        google.maps.event.clearListeners(map, 'mousedown');
-        google.maps.event.clearListeners(map, 'mouseup');
+      if (map && window.google) {
+        window.google.maps.event.clearListeners(map, 'mousedown');
+        window.google.maps.event.clearListeners(map, 'mouseup');
       }
     };
   }, [map, longPressTimer, handleMouseDown]);
 
-  return null; // This component handles map controls but doesn't render anything
+  return null;
 };
+
+export default MapControls;
