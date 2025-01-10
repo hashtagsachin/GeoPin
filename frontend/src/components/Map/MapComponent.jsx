@@ -83,6 +83,12 @@ const handleDeleteMarker = useCallback (() => {
     }
   }, [selectedPlace]);
 
+  // save functionality for custom marker
+const handleSaveCustomMarker = useCallback(() => {
+  // For now, we'll just log the marker position like we do with Places
+  console.log('Saving custom marker:', customMarker);
+}, [customMarker]);
+
   // Handle loading error
   if (loadError) {
     return <div className="map-error">{MAP_ERROR_MESSAGES.LOAD_FAILED}</div>;
@@ -136,38 +142,54 @@ const handleDeleteMarker = useCallback (() => {
       >
         {/* Show custom marker from long press */}
         {customMarker && (
-          <>
-            <Marker
-              position={customMarker.position}
-              draggable={true}
-              onClick={handleCustomMarkerClick}
-            />
-            {isCustomMarkerInfoOpen && (
-              <InfoWindow
-                position={customMarker.position}
-                onCloseClick={() => setIsCustomMarkerInfoOpen(false)}
-              >
-                <div>
-                  <h3>Custom Marker</h3>
-                  <button 
-                    onClick={handleDeleteMarker}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      marginTop: '8px'
-                    }}
-                  >
-                    Delete Marker
-                  </button>
-                </div>
-              </InfoWindow>
-            )}
-          </>
-        )}
+  <>
+    <Marker
+      position={customMarker.position}
+      draggable={true}
+      onClick={handleCustomMarkerClick}
+    />
+    {isCustomMarkerInfoOpen && (
+      <InfoWindow
+        position={customMarker.position}
+        onCloseClick={() => setIsCustomMarkerInfoOpen(false)}
+      >
+        <div>
+          <h3>Custom Marker</h3>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={handleSaveCustomMarker}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#4285f4',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginTop: '8px'
+              }}
+            >
+              Save Marker
+            </button>
+            <button 
+              onClick={handleDeleteMarker}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginTop: '8px'
+              }}
+            >
+              Delete Marker
+            </button>
+          </div>
+        </div>
+      </InfoWindow>
+    )}
+  </>
+)}
 
         {/* Show info window for selected place */}
         {selectedPlace && (
