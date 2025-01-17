@@ -1,12 +1,15 @@
 package com.geopin.model;
 
 import jakarta.persistence.*;
+
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -29,14 +32,15 @@ public class POI {
     @Column(nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "text")
     private String description;
 
     /**
      * The geographical location stored as a PostGIS Point.
      * The SRID 4326 corresponds to the WGS84 coordinate system used by GPS.
      */
-    @Column(columnDefinition = "geometry(Point,4326)")
+    @Column(name = "location")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
     private Point location;
 
     /**
