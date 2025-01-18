@@ -12,9 +12,11 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * Represents a Point of Interest (POI) in the GeoPin application.
  * This entity stores location information along with metadata about places users want to remember.
@@ -39,6 +41,7 @@ public class POI {
      * The geographical location stored as a PostGIS Point.
      * The SRID 4326 corresponds to the WGS84 coordinate system used by GPS.
      */
+    @JsonIgnore
     @Column(name = "location")
     @JdbcTypeCode(SqlTypes.GEOMETRY)
     private Point location;
@@ -122,8 +125,14 @@ public class POI {
 		this.description = description;
 	}
 
-	public Point getLocation() {
-		return location;
+	public Map<String, Double> getLocation() {
+	    if (location != null) {
+	        Map<String, Double> locationMap = new HashMap<>();
+	        locationMap.put("latitude", location.getY());  // Y coordinate is latitude
+	        locationMap.put("longitude", location.getX()); // X coordinate is longitude
+	        return locationMap;
+	    }
+	    return null;
 	}
 
 	public void setLocation(Point location) {

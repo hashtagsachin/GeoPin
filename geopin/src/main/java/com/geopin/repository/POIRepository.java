@@ -37,13 +37,14 @@ public interface POIRepository extends JpaRepository<POI, Long> {
      * @param distanceInMeters The search radius in meters
      * @return List of POIs within the specified distance
      */
-    @Query(value = "SELECT p.* FROM poi p WHERE ST_DWithin(" +
-           "p.location, :location, :distanceInMeters, true)", 
-           nativeQuery = true)
-    List<POI> findPOIsWithinDistance(
-        @Param("location") Point location, 
-        @Param("distanceInMeters") double distanceInMeters
-    );
+	@Query(value = "SELECT p.* FROM pois p WHERE ST_DWithin(" +
+		       "p.location::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :distance)", 
+		       nativeQuery = true)
+		List<POI> findPOIsWithinDistance(
+		    @Param("lat") double latitude,
+		    @Param("lng") double longitude,
+		    @Param("distance") double distance
+		);
 
     /**
      * Finds all POIs within a rectangular bounding box defined by two corner points.

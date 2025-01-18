@@ -58,18 +58,13 @@ public class POIController {
 	
 	
 	@GetMapping("/search/radius")
-    public ResponseEntity<List<POI>> findPOIsWithinDistance(
-            @RequestParam("lat") double lat,
-            @RequestParam("lng") double lng,
-            @RequestParam("distance") double distanceInMeters) {
-        
-        // Create a Point from the latitude and longitude
-        GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
-        Point center = gf.createPoint(new Coordinate(lng, lat));
-        
-        List<POI> pois = poiService.findPOIsWithinDistance(center, distanceInMeters);
-        return ResponseEntity.ok(pois);
-    }
+	public ResponseEntity<List<POI>> findPOIsWithinDistance(
+	        @RequestParam("lat") double lat,
+	        @RequestParam("lng") double lng,
+	        @RequestParam("distance") double distanceInMeters) {
+	    List<POI> pois = poiService.findPOIsWithinDistance(lat, lng, distanceInMeters);
+	    return ResponseEntity.ok(pois);
+	}
 
     // And this one for bounding box search
     @GetMapping("/search/bounds")

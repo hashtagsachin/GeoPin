@@ -61,8 +61,8 @@ public class POIService {
         poiRepository.delete(poi);
     }
     
-    public List<POI> findPOIsWithinDistance(Point location, double distanceInMeters) {
-        return poiRepository.findPOIsWithinDistance(location, distanceInMeters);
+    public List<POI> findPOIsWithinDistance(double latitude, double longitude, double distance) {
+        return poiRepository.findPOIsWithinDistance(latitude, longitude, distance);
     }
 
     // And this one
