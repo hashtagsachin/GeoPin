@@ -67,6 +67,19 @@ const MapComponent = () => {
 
   const handleMarkerSave = async (updatedMarker) => {
     try {
+      console.log('Map instance when saving:', map); // Debug log
+      
+      if (!map) {
+        console.log('No map instance available!');
+        return;
+      }
+  
+      // Store current map center and zoom before any state updates
+      const currentCenter = map.getCenter().toJSON();
+      const currentZoom = map.getZoom();
+      
+      console.log('Stored map position:', { currentCenter, currentZoom }); // Debug log
+  
       const poiData = {
         name: updatedMarker.name,
         latitude: updatedMarker.position.lat,
@@ -74,20 +87,20 @@ const MapComponent = () => {
         description: updatedMarker.description,
         status: updatedMarker.status || 'ACTIVE'
       };
-
+  
       let savedPOI;
       if (updatedMarker.id.toString().startsWith('temp_')) {
         savedPOI = await poiService.createPOI(poiData);
       } else {
         savedPOI = await poiService.updatePOI(updatedMarker.id, poiData);
       }
-
+  
       setMarkers(prev => prev.map(m => 
         m.id === updatedMarker.id ? {
           id: savedPOI.id,
           position: {
-            lat: savedPOI.location.latitude,
-            lng: savedPOI.location.longitude
+            lat: savedPOI.latitude,
+            lng: savedPOI.longitude
           },
           name: savedPOI.name,
           description: savedPOI.description,
@@ -96,6 +109,16 @@ const MapComponent = () => {
         } : m
       ));
       setSelectedMarker(null);
+  
+      // Add slight delay before restoring map view
+      setTimeout(() => {
+        console.log('Attempting to restore map view. Map instance:', map); // Debug log
+        if (map) {
+          map.setCenter(currentCenter);
+          map.setZoom(currentZoom);
+          console.log('Map view restored'); // Debug log
+        }
+      }, 100);
     } catch (error) {
       console.error('Error saving POI:', error);
     }
