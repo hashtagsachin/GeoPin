@@ -1,29 +1,66 @@
-// PinDetailModal.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../shared/Modal';
-import { X, Tag, MapPin } from 'lucide-react';
-import './PinDetailModal.css';  // Import our CSS file
+import { X, Tag as TagIcon, MapPin, Loader } from 'lucide-react';
+import { tagService } from '../../services/api';
+import './PinDetailModal.css';
 
 const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
+  // Main form state
   const [formData, setFormData] = useState({
     name: marker.name || '',
-    notes: marker.notes || '',
+    description: marker.description || '',
     tags: marker.tags || []
   });
+  
+  // UI state
   const [newTag, setNewTag] = useState('');
+  const [existingTags, setExistingTags] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [tagLoading, setTagLoading] = useState(true);
 
-  // Add a new function to handle adding tags
-  const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
+  // Load existing tags when modal opens
+  useEffect(() => {
+    const loadTags = async () => {
+      try {
+        const tags = await tagService.getAllTags();
+        // Extract tag names from the tag objects
+        setExistingTags(tags.map(tag => tag.name));
+      } catch (error) {
+        console.error('Error loading tags:', error);
+      } finally {
+        setTagLoading(false);
+      }
+    };
+    loadTags();
+  }, []);
+
+  const handleAddTag = async () => {
+    const tagName = newTag.trim();
+    if (tagName && !formData.tags.includes(tagName)) {
+      try {
+        setTagLoading(true);
+        
+        // If it's a new tag, create it in the backend
+        if (!existingTags.includes(tagName)) {
+          await tagService.createTag({ name: tagName });
+          setExistingTags(prev => [...prev, tagName]);
+        }
+
+        // Add to form data
+        setFormData(prev => ({
+          ...prev,
+          tags: [...prev.tags, tagName]
+        }));
+        
+        setNewTag('');
+      } catch (error) {
+        console.error('Error adding tag:', error);
+      } finally {
+        setTagLoading(false);
+      }
     }
   };
 
-  // Add a function to remove tags
   const handleRemoveTag = (tagToRemove) => {
     setFormData(prev => ({
       ...prev,
@@ -31,12 +68,21 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      ...marker,
-      ...formData
-    });
+    setIsLoading(true);
+    try {
+      // Combine marker position data with form data
+      const updatedMarker = {
+        ...marker,
+        ...formData
+      };
+      await onSave(updatedMarker);
+    } catch (error) {
+      console.error('Error saving location:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,7 +94,11 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
             <MapPin size={20} />
             <h3>Location Details</h3>
           </div>
-          <button className="close-button" onClick={onClose}>
+          <button 
+            className="close-button" 
+            onClick={onClose}
+            disabled={isLoading}
+          >
             <X size={20} />
           </button>
         </div>
@@ -62,9 +112,14 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
             <input
               type="text"
               value={formData.name}
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={e => setFormData(prev => ({ 
+                ...prev, 
+                name: e.target.value 
+              }))}
               className="form-input"
               placeholder="Enter location name"
+              disabled={isLoading}
+              required
             />
           </div>
 
@@ -72,13 +127,18 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
           <div className="form-group">
             <label className="form-label">
               Tags
+              {tagLoading && <Loader className="inline-loader" size={16} />}
             </label>
             <div className="tags-container">
               {formData.tags.map((tag) => (
                 <span key={tag} className="tag">
-                  <Tag className="tag-icon" size={16} />
+                  <TagIcon className="tag-icon" size={16} />
                   {tag}
-                  <button onClick={() => handleRemoveTag(tag)}>
+                  <button 
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    disabled={isLoading}
+                  >
                     <X size={16} />
                   </button>
                 </span>
@@ -91,29 +151,46 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
                 onChange={(e) => setNewTag(e.target.value)}
                 className="form-input"
                 placeholder="Add a tag"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                list="existing-tags"
+                disabled={isLoading || tagLoading}
               />
+              <datalist id="existing-tags">
+                {existingTags.map(tag => (
+                  <option key={tag} value={tag} />
+                ))}
+              </datalist>
               <button
                 type="button"
                 onClick={handleAddTag}
                 className="add-tag-button"
+                disabled={isLoading || tagLoading}
               >
                 Add
               </button>
             </div>
           </div>
 
-          {/* Notes Section */}
+          {/* Description Section */}
           <div className="form-group">
             <label className="form-label">
-              Notes
+              Description
             </label>
             <textarea
-              value={formData.notes}
-              onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              value={formData.description}
+              onChange={e => setFormData(prev => ({ 
+                ...prev, 
+                description: e.target.value 
+              }))}
               className="form-input"
               rows="3"
-              placeholder="Add notes about this location..."
+              placeholder="Add details about this location..."
+              disabled={isLoading}
             />
           </div>
 
@@ -123,14 +200,21 @@ const PinDetailModal = ({ marker, onClose, onSave, onDelete }) => {
               type="button"
               onClick={() => onDelete(marker.id)}
               className="delete-button"
+              disabled={isLoading}
             >
               Delete
             </button>
             <button
               type="submit"
               className="save-button"
+              disabled={isLoading}
             >
-              Save
+              {isLoading ? (
+                <>
+                  <Loader className="spinner" size={16} />
+                  Saving...
+                </>
+              ) : 'Save'}
             </button>
           </div>
         </form>

@@ -1,147 +1,182 @@
 /* PinDetailModal.css */
+/* Keeping existing styles and adding new ones */
+
+/* The following styles remain unchanged */
 .modal-content {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 16px;
-    min-width: 300px;
-  }
-  
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  
-  .header-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .header-title h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .close-button {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    padding: 4px;
-  }
-  
-  .close-button:hover {
-    color: #333;
-  }
-  
-  .form-group {
-    margin-bottom: 16px;
-  }
-  
-  .form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 4px;
-  }
-  
-  .form-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-  
-  .form-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-  
-  .tags-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    background-color: #e6f0ff;
-    color: #1e40af;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  
-  .tag-icon {
-    margin-right: 4px;
-  }
-  
-  .tag button {
-    background: none;
-    border: none;
-    color: inherit;
-    margin-left: 4px;
-    cursor: pointer;
-    padding: 0;
-  }
-  
-  .tag button:hover {
-    color: #1e3a8a;
-  }
-  
-  .tag-input-container {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .add-tag-button {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .add-tag-button:hover {
-    background-color: #2563eb;
-  }
-  
-  .action-buttons {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .delete-button {
-    color: #dc2626;
-    background: none;
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-  }
-  
-  .delete-button:hover {
-    color: #b91c1c;
-  }
-  
-  .save-button {
-    background-color: #10b981;
-    color: white;
-    border: none;
-    padding: 8px 24px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .save-button:hover {
-    background-color: #059669;
-  }
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-width: 300px;
+}
+
+/* ... (keeping all existing styles until form-input) ... */
+
+/* Enhanced form input styles with disabled state */
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  color: #6b7280;
+  border-color: #e5e7eb;
+}
+
+.form-input:focus:not(:disabled) {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Loading indicator styles */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.inline-loader {
+  margin-left: 8px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* Enhanced button styles with disabled states */
+.add-tag-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+}
+
+.add-tag-button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.add-tag-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Enhanced action button styles */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.delete-button {
+  color: #dc2626;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.delete-button:hover:not(:disabled) {
+  color: #b91c1c;
+}
+
+.delete-button:disabled {
+  color: #fca5a5;
+  cursor: not-allowed;
+}
+
+.save-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.save-button:disabled {
+  background-color: #6ee7b7;
+  cursor: not-allowed;
+}
+
+/* Tag management enhancements */
+.tag-input-container {
+  display: flex;
+  gap: 8px;
+  position: relative;
+}
+
+/* Datalist styling enhancements */
+input[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.tags-container {
+  min-height: 32px; /* Ensures consistent spacing even when empty */
+  padding: 4px 0;
+}
+
+/* Loading state overlay for tag container */
+.tags-container.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Error state styles */
+.form-input.error {
+  border-color: #dc2626;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Accessibility improvements */
+.form-input:focus,
+.add-tag-button:focus,
+.delete-button:focus,
+.save-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
