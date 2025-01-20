@@ -1,67 +1,48 @@
 package com.geopin.repository;
 
-
 import java.util.List;
-import org.locationtech.jts.geom.Point;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.geopin.model.POI;
+import com.geopin.model.POIStatus;
 
 /**
  * Repository interface for POI (Point of Interest) entities.
- * This interface provides all basic CRUD operations by extending JpaRepository.
  * 
- * JpaRepository provides the following methods out of the box:
- * - save(POI entity): saves a POI entity and returns the saved entity
- * - findById(Long id): finds a POI by its ID and returns an Optional<POI>
- * - findAll(): returns all POIs as a List<POI>
- * - deleteById(Long id): deletes a POI by its ID
- * - delete(POI entity): deletes the given POI entity
- * - count(): returns the total number of POIs
- * - existsById(Long id): checks if a POI exists with the given ID
+ * In Spring Boot, repositories handle database operations. This interface extends
+ * JpaRepository which gives us many useful methods out of the box. By extending
+ * JpaRepository<POI, Long>, we're saying this repository works with POI entities
+ * and uses Long as the type for ID values.
+ * 
+ * The @Repository annotation marks this as a Spring repository component.
  */
 @Repository
 public interface POIRepository extends JpaRepository<POI, Long> {
-    // Basic CRUD operations are inherited from JpaRepository
-    // We'll add custom query methods below
-	
-	
-	/**
-     * Finds all POIs within a specified distance from a given point.
-     * Uses PostGIS ST_DWithin for efficient radius search.
-     * ST_DWithin is more efficient than ST_Distance as it uses spatial indexes.
-     * 
-     * @param location The center point to search from
-     * @param distanceInMeters The search radius in meters
-     * @return List of POIs within the specified distance
-     */
-	@Query(value = "SELECT p.* FROM pois p WHERE ST_DWithin(" +
-		       "p.location::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :distance)", 
-		       nativeQuery = true)
-		List<POI> findPOIsWithinDistance(
-		    @Param("lat") double latitude,
-		    @Param("lng") double longitude,
-		    @Param("distance") double distance
-		);
-
     /**
-     * Finds all POIs within a rectangular bounding box defined by two corner points.
-     * Uses PostGIS ST_MakeEnvelope to create a bounding box and ST_Within for the spatial query.
+     * Since we're working with a small dataset (<200 POIs), we can rely on the
+     * built-in JpaRepository methods:
      * 
-     * @param southWest The bottom-left corner of the bounding box
-     * @param northEast The top-right corner of the bounding box
-     * @return List of POIs within the bounding boxx ok
+     * - save(POI entity): saves or updates a POI
+     * - findById(Long id): finds a POI by its ID
+     * - findAll(): gets all POIs
+     * - deleteById(Long id): deletes a POI by its ID
+     * - delete(POI entity): deletes the given POI
+     * - count(): counts total number of POIs
+     * - existsById(Long id): checks if a POI exists
+     * 
+     * We can add simple finder methods here if needed, like:
+     * - finding POIs by name
+     * - finding POIs by status
+     * - finding POIs by tag
      */
-    @Query(value = "SELECT p.* FROM poi p WHERE ST_Within(" +
-           "p.location, ST_MakeEnvelope(" +
-           "ST_X(:southWest), ST_Y(:southWest), " +
-           "ST_X(:northEast), ST_Y(:northEast), 4326))",
-           nativeQuery = true)
-    List<POI> findPOIsWithinBoundingBox(
-        @Param("southWest") Point southWest,
-        @Param("northEast") Point northEast
-    );
-	
+
+    // Find POIs by name (case-insensitive, partial match)
+    List<POI> findByNameContainingIgnoreCase(String name);
+    
+    // Find POIs by status
+    List<POI> findByStatus(POIStatus status);
+
+    // Find POIs by tag name
+    List<POI> findByTags_NameContainingIgnoreCase(String tagName);
 }
