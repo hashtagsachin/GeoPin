@@ -1,136 +1,239 @@
 # Testing Strategy Documentation for GeoPin
 
-## Overview
-This document outlines the comprehensive testing strategy implemented for the GeoPin application, focusing particularly on the spatial data handling capabilities. Our testing approach emphasizes reliability, reproducibility, and real-world applicability using actual geographic coordinates from London landmarks.
+## Introduction
 
-## Testing Environment Setup
+Testing a location-based application requires careful attention to geographical calculations and data integrity. Our testing strategy for GeoPin focuses on ensuring accurate distance calculations, proper coordinate handling, and reliable data management. We've designed our tests to be easy to understand, quick to run, and thorough in coverage.
 
-### Docker and TestContainers
-We use Docker through TestContainers to ensure consistent and isolated testing environments. This approach offers several key advantages:
+## Testing Environment
 
-1. **Clean State Guarantee**: Each test run begins with a fresh database instance, eliminating test interdependencies and data pollution.
-2. **Consistent Environment**: All developers work with identical database configurations, preventing "works on my machine" scenarios.
-3. **PostGIS Integration**: Our Docker container (postgis/postgis:15-3.3) comes pre-configured with PostGIS extensions, ensuring proper spatial functionality testing.
-4. **Automatic Resource Management**: TestContainers handles container lifecycle management, including cleanup after tests complete.
+One of the major benefits of our simplified architecture is that we can use a standard H2 in-memory database for testing. This makes our tests:
+- Lightning fast to execute
+- Easy to set up on any development machine
+- Independent of any external dependencies
+- Simple to integrate with continuous integration systems
 
-### Test Configuration
-Our test configuration is structured in two main components:
+Here's how we configure our test environment:
 
 ```java
 @TestConfiguration
 public class TestConfig {
-    public static final PostgreSQLContainer<?> postgres;
-
-    static {
-        // Configure PostgreSQL container with PostGIS support
-        postgres = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgis/postgis:15-3.3"))
-            .withDatabaseName("geopin_test")
-            .withUsername("test")
-            .withPassword("test")
-            .withCommand("postgres -c max_prepared_transactions=100");
-        
-        postgres.start();
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.H2)
+            .addScript("schema.sql")
+            .addScript("test-data.sql")
+            .build();
     }
 }
 ```
 
-This configuration ensures that our tests run against a properly configured PostGIS-enabled database.
+The schema.sql file contains our table definitions, while test-data.sql populates the database with known test locations. We use real London landmarks as test data because their actual distances are well-documented and easy to verify.
 
-## Test Data Design
-Our test data is carefully chosen to represent real-world scenarios using actual London landmarks:
+## Our Test Data
 
-1. **Central Point**: Trafalgar Square (51.5080° N, 0.1284° W)
-2. **Nearby Point**: Leicester Square (51.5113° N, 0.1283° W)
-3. **Distant Point**: St. Paul's Cathedral (51.5138° N, 0.0983° W)
+We carefully selected a set of London landmarks for our tests. These locations provide real-world coordinates with known distances between them:
 
-This choice of locations provides several advantages:
-- Known, verifiable distances between points
-- Real-world coordinates for testing actual GPS data handling
-- Familiar landmarks that make test scenarios more intuitive
-
-## Test Cases
-
-### 1. Distance-Based Search Testing
 ```java
-@Test
-void testFindPOIsWithinDistance() {
-    Point center = (Point) new WKTReader().read("POINT(-0.1284 51.5080)");
+public class TestLocations {
+    // Trafalgar Square - Our central reference point
+    public static final double TRAFALGAR_LAT = 51.5080;
+    public static final double TRAFALGAR_LON = -0.1284;
     
-    // Test 1km radius (should include Trafalgar Square and Leicester Square)
-    List<POI> poisWithin1km = poiRepository.findPOIsWithinDistance(center, 1000.0);
-    assertEquals(2, poisWithin1km.size(), 
-        "Should find 2 POIs within 1km of Trafalgar Square");
-
-    // Test 3km radius (should include all points)
-    List<POI> poisWithin3km = poiRepository.findPOIsWithinDistance(center, 3000.0);
-    assertEquals(3, poisWithin3km.size(),
-        "Should find all 3 POIs within 3km of Trafalgar Square");
-}
-```
-
-This test verifies our spatial distance calculations using real-world distances in central London.
-
-### 2. Bounding Box Search Testing
-```java
-@Test
-void testFindPOIsWithinBoundingBox() {
-    Point southWest = (Point) new WKTReader().read("POINT(-0.1300 51.5070)");
-    Point northEast = (Point) new WKTReader().read("POINT(-0.1270 51.5120)");
+    // Leicester Square - About 360 meters from Trafalgar Square
+    public static final double LEICESTER_LAT = 51.5113;
+    public static final double LEICESTER_LON = -0.1283;
     
-    List<POI> poisInBox = poiRepository.findPOIsWithinBoundingBox(southWest, northEast);
-    assertEquals(2, poisInBox.size(), 
-        "Should find 2 POIs within the West End bounding box");
+    // St. Paul's Cathedral - About 2 kilometers from Trafalgar Square
+    public static final double ST_PAULS_LAT = 51.5138;
+    public static final double ST_PAULS_LON = -0.0983;
 }
 ```
 
-This test confirms our ability to find POIs within a geographic rectangle, useful for map viewport queries.
+Using real landmarks helps us:
+- Verify our distance calculations against known measurements
+- Make our test scenarios more intuitive and relatable
+- Catch any issues with coordinate precision or calculation accuracy
 
-### 3. Tag-Based Search Testing
-We implement two complementary tests for tag functionality:
+## Testing Our Core Components
+
+### 1. GeoCalculator Tests
+
+The GeoCalculator class is the heart of our location-based functionality, so we test it thoroughly:
 
 ```java
 @Test
-void testFindPOIsByTagName() {
-    List<POI> restaurantPOIs = tagRepository.findPOIsByTagName("restaurant");
-    assertEquals(2, restaurantPOIs.size(), 
-        "Should find 2 POIs tagged as restaurants");
+void testDistanceCalculation() {
+    // Distance between Trafalgar Square and Leicester Square
+    double distance = GeoCalculator.calculateDistance(
+        TRAFALGAR_LAT, TRAFALGAR_LON,
+        LEICESTER_LAT, LEICESTER_LON
+    );
+    
+    // The actual walking distance is about 360 meters
+    // We expect our calculation to be within 10 meters of this
+    assertEquals(360.0, distance, 10.0,
+        "Distance calculation should match known distance between landmarks");
 }
 
 @Test
-void testFindPOIsByNonExistentTag() {
-    List<POI> nonExistentTagPOIs = tagRepository.findPOIsByTagName("nonexistent");
-    assertTrue(nonExistentTagPOIs.isEmpty(),
-        "Should return empty list for non-existent tag");
+void testBoundingBoxCheck() {
+    // Create a bounding box that includes Trafalgar and Leicester Square
+    // but excludes St. Paul's
+    boolean inBox = GeoCalculator.isWithinBoundingBox(
+        LEICESTER_LAT, LEICESTER_LON,
+        51.5070, -0.1300,  // Southwest corner
+        51.5120, -0.1270   // Northeast corner
+    );
+    
+    assertTrue(inBox, "Leicester Square should be within the West End bounding box");
 }
 ```
 
-These tests verify both positive and negative scenarios in our tagging system.
+We also test edge cases that might occur in real-world usage:
 
-## Performance Considerations
-Our test execution times provide insight into query performance:
-- Tag queries: ~0.012s
-- Bounding box queries: ~0.018s
-- Distance queries: ~0.090s
+```java
+@Test
+void testEdgeCases() {
+    // Test international date line crossing
+    double distance = GeoCalculator.calculateDistance(
+        0.0, 179.9,  // Just west of the date line
+        0.0, -179.9  // Just east of the date line
+    );
+    
+    // These points are close to each other despite their longitudes
+    assertTrue(distance < 300000,
+        "Points across the date line should calculate as nearby");
+    
+    // Test polar coordinates
+    double polarDistance = GeoCalculator.calculateDistance(
+        89.9, 0.0,  // Near North Pole
+        89.9, 180.0 // Opposite side but same latitude
+    );
+    
+    // Distance should be very small despite longitude difference
+    assertTrue(polarDistance < 1000,
+        "Near-polar points should have small distances despite longitude");
+}
+```
 
-These timings suggest efficient spatial index utilization, crucial for production performance.
+### 2. Repository Tests
+
+Our repository tests focus on basic CRUD operations and relationship management:
+
+```java
+@Test
+void testPOICreationAndRetrieval() {
+    POI trafalgarSquare = new POI(
+        "Trafalgar Square",
+        TRAFALGAR_LAT,
+        TRAFALGAR_LON
+    );
+    trafalgarSquare = poiRepository.save(trafalgarSquare);
+    
+    Optional<POI> retrieved = poiRepository.findById(trafalgarSquare.getId());
+    assertTrue(retrieved.isPresent());
+    assertEquals(TRAFALGAR_LAT, retrieved.get().getLatitude(), 0.0001);
+}
+```
+
+### 3. Service Layer Tests
+
+The service layer combines repository operations with geographical calculations:
+
+```java
+@Test
+void testFindNearbyPOIs() {
+    // Should find Leicester Square but not St. Paul's
+    List<POI> nearbyPOIs = poiService.findPOIsWithinDistance(
+        TRAFALGAR_LAT,
+        TRAFALGAR_LON,
+        500.0  // 500 meter radius
+    );
+    
+    assertEquals(1, nearbyPOIs.size(),
+        "Should find one POI (Leicester Square) within 500m");
+    assertEquals("Leicester Square", nearbyPOIs.get(0).getName());
+}
+```
+
+## Integration Testing
+
+We use Spring Boot's testing support to verify the entire stack works together:
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class POIControllerIntegrationTest {
+    @Test
+    void testSearchNearby(@Autowired MockMvc mockMvc) throws Exception {
+        mockMvc.perform(get("/api/pois/nearby")
+            .param("lat", String.valueOf(TRAFALGAR_LAT))
+            .param("lon", String.valueOf(TRAFALGAR_LON))
+            .param("radius", "500"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", hasSize(1)))
+            .andExpect(jsonPath("$[0].name", is("Leicester Square")));
+    }
+}
+```
+
+## Performance Testing
+
+While our simplified architecture handles location data differently than PostGIS, it's still important to understand its performance characteristics:
+
+```java
+@Test
+void testPerformanceWithMultiplePOIs() {
+    // Create 100 POIs in a grid around Trafalgar Square
+    List<POI> testPOIs = createTestPOIGrid(100);
+    poiRepository.saveAll(testPOIs);
+    
+    long startTime = System.nanoTime();
+    List<POI> nearbyPOIs = poiService.findPOIsWithinDistance(
+        TRAFALGAR_LAT,
+        TRAFALGAR_LON,
+        1000.0
+    );
+    long endTime = System.nanoTime();
+    
+    long millisTaken = (endTime - startTime) / 1_000_000;
+    assertTrue(millisTaken < 100,
+        "Nearby search should complete in under 100ms");
+}
+```
+
+## Best Practices for Testing
+
+Through developing GeoPin's test suite, we've established several best practices:
+
+1. Always use real-world coordinates in tests. This helps catch issues that might not appear with artificial coordinates.
+
+2. Include a margin of error in distance comparisons. Due to the nature of geographical calculations, exact matches aren't always possible or necessary.
+
+3. Test edge cases explicitly, especially around the international date line and poles.
+
+4. Use meaningful test data. Our London landmarks make it easy to verify results visually on a map.
+
+5. Keep performance in mind. While our current approach is perfect for hundreds of POIs, we monitor execution times to ensure we maintain good performance.
 
 ## Future Testing Considerations
 
-1. **Edge Cases**:
-   - International Date Line crossing
-   - Polar region coordinates
-   - Extremely dense POI clusters
+As GeoPin evolves, we plan to expand our testing in several areas:
 
-2. **Performance Testing**:
-   - Large dataset behavior
-   - Concurrent query handling
-   - Index efficiency analysis
+1. User Interaction Testing
+   - Testing distance calculations with user-provided coordinates
+   - Verifying coordinate validation and error handling
+   - Testing the interaction between map clicks and coordinate storage
 
-3. **Integration Testing**:
-   - Frontend map interaction
-   - Real-time update scenarios
-   - Mobile device location accuracy
+2. Mobile Device Integration
+   - Testing with GPS coordinates from different mobile devices
+   - Verifying accuracy with real-world movement tracking
+   - Testing coordinate precision across different devices
 
-## Conclusion
-Our testing strategy provides a robust foundation for ensuring GeoPin's spatial functionality works correctly. The combination of Docker-based isolation, real-world test data, and comprehensive test cases gives us confidence in the application's reliability and performance.
+3. Data Migration Testing
+   - Ensuring smooth updates to coordinate storage
+   - Verifying data integrity during format changes
+   - Testing backup and restore procedures
+
+Our simplified architecture makes all these tests easier to implement and maintain, while still providing the accuracy and reliability our users need.
