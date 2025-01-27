@@ -76,7 +76,7 @@ export const poiService = {
   // Find POIs within distance
   async findPOIsWithinDistance(lat, lng, distance) {
     const response = await fetch(
-      `${API_BASE_URL}/pois/search/within?lat=${lat}&lng=${lng}&distance=${distance}`
+      `${API_BASE_URL}/pois/search/radius?lat=${lat}&lng=${lng}&distance=${distance}`
     );
     return handleResponse(response);
   },
@@ -84,7 +84,7 @@ export const poiService = {
   // Find POIs within bounding box
   async findPOIsInBoundingBox(minLat, minLng, maxLat, maxLng) {
     const response = await fetch(
-      `${API_BASE_URL}/pois/search/box?minLat=${minLat}&minLng=${minLng}&maxLat=${maxLat}&maxLng=${maxLng}`
+      `${API_BASE_URL}/pois/search/bounds?minLat=${minLat}&minLng=${minLng}&maxLat=${maxLat}&maxLng=${maxLng}`
     );
     return handleResponse(response);
   }
@@ -125,16 +125,3 @@ export const tagService = {
   }
 };
 
-// Sample POI data structure for reference
-/*
-const samplePOI = {
-  name: "Trafalgar Square",
-  location: {
-    type: "Point",
-    coordinates: [-0.128069, 51.508039]  // [longitude, latitude]
-  },
-  status: "ACTIVE",
-  tags: ["tourist", "landmark"],
-  notes: "Famous square in central London"
-};
-*/

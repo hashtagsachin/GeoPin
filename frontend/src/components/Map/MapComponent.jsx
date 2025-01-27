@@ -8,7 +8,7 @@ import PinMarker from '../Pins/PinMarker';
 import PinDetailModal from '../Pins/PinDetailModal';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
-
+const libraries = ["places", "geometry"];
 // SECTION 2: Component Function
 const MapComponent = () => {
   // SECTION 2A: State declarations
@@ -20,7 +20,7 @@ const MapComponent = () => {
   // SECTION 2B: useJsApiLoader and other hooks
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ["places", "geometry"],
+    libraries
   });
 
   // Load existing POIs on mount
@@ -31,8 +31,8 @@ const MapComponent = () => {
         const loadedMarkers = pois.map(poi => ({
           id: poi.id,
           position: {
-            lat: poi.latitude,  // Changed from poi.location.latitude
-            lng: poi.longitude  // Changed from poi.location.longitude
+            lat: poi.latitude,  
+            lng: poi.longitude 
           },
           name: poi.name,
           description: poi.description,
