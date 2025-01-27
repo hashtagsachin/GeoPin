@@ -1,12 +1,13 @@
 import React from 'react';
-import MapComponent from './components/Map/MapComponent';
+import DashboardLayout from './components/Dashboard/DashboardLayout';
 
 function App() {
   return (
     <div className="app">
-      <MapComponent />
+      <DashboardLayout />
     </div>
   );
 }
 
 export default App;
+
