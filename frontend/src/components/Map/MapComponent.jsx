@@ -7,6 +7,8 @@ import PinMarker from '../Pins/PinMarker';
 import PinDetailModal from '../Pins/PinDetailModal';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
+import MapTransitions from './MapTransitions';
+
 const libraries = ["places", "geometry"];
 
 const MapComponent = ({ selectedPOI }) => {
@@ -49,52 +51,9 @@ const MapComponent = ({ selectedPOI }) => {
     }
   }, [isLoaded]);
 
-  // Handle smooth centering on selected POI
-useEffect(() => {
-  if (map && selectedPOI) {
-    const position = {
-      lat: selectedPOI.latitude,
-      lng: selectedPOI.longitude
-    };
+ 
 
-    // Always pan smoothly to the new location
-    map.panTo(position);
-    
-    // Get current zoom to determine animation steps
-    const currentZoom = map.getZoom();
-    const targetZoom = 15;
-    
-    // If current zoom is different from target zoom, animate it
-    if (currentZoom !== targetZoom) {
-      // Wait for pan to start before zooming
-      setTimeout(() => {
-        // Determine if we're zooming in or out
-        const zoomingIn = currentZoom < targetZoom;
-        let zoomStep = currentZoom;
-        
-        const zoomInterval = setInterval(() => {
-          if (zoomingIn) {
-            zoomStep += 1;
-            if (zoomStep >= targetZoom) {
-              clearInterval(zoomInterval);
-              map.setZoom(targetZoom);
-              return;
-            }
-          } else {
-            zoomStep -= 1;
-            if (zoomStep <= targetZoom) {
-              clearInterval(zoomInterval);
-              map.setZoom(targetZoom);
-              return;
-            }
-          }
-          map.setZoom(zoomStep);
-        }, 150);
-      }, 300);
-    }
-  }
-}, [map, selectedPOI]);
-
+  
   const handleMapLoad = useCallback((mapInstance) => {
     setMap(mapInstance);
   }, []);
@@ -180,6 +139,8 @@ useEffect(() => {
         zoom={DEFAULT_ZOOM}
         onLoad={handleMapLoad}
       >
+        <MapTransitions map={map} selectedPOI={selectedPOI} />
+          
         <MapControls 
           map={map}
           onMarkerAdd={handleMarkerAdd}
