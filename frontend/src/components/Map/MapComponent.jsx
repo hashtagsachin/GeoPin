@@ -1,23 +1,20 @@
-// SECTION 1: Imports at the top
 import React, { useCallback, useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../../services/mapService';
-import { poiService, tagService } from '../../services/api';
+import { poiService } from '../../services/api';
 import MapControls from './MapControls';
 import PinMarker from '../Pins/PinMarker';
 import PinDetailModal from '../Pins/PinDetailModal';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
 const libraries = ["places", "geometry"];
-// SECTION 2: Component Function
-const MapComponent = () => {
-  // SECTION 2A: State declarations
+
+const MapComponent = ({ selectedPOI }) => {
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // SECTION 2B: useJsApiLoader and other hooks
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries
@@ -31,8 +28,8 @@ const MapComponent = () => {
         const loadedMarkers = pois.map(poi => ({
           id: poi.id,
           position: {
-            lat: poi.latitude,  
-            lng: poi.longitude 
+            lat: poi.latitude,
+            lng: poi.longitude
           },
           name: poi.name,
           description: poi.description,
@@ -52,7 +49,52 @@ const MapComponent = () => {
     }
   }, [isLoaded]);
 
-  // SECTION 2C: Event handlers and other functions
+  // Handle smooth centering on selected POI
+useEffect(() => {
+  if (map && selectedPOI) {
+    const position = {
+      lat: selectedPOI.latitude,
+      lng: selectedPOI.longitude
+    };
+
+    // Always pan smoothly to the new location
+    map.panTo(position);
+    
+    // Get current zoom to determine animation steps
+    const currentZoom = map.getZoom();
+    const targetZoom = 15;
+    
+    // If current zoom is different from target zoom, animate it
+    if (currentZoom !== targetZoom) {
+      // Wait for pan to start before zooming
+      setTimeout(() => {
+        // Determine if we're zooming in or out
+        const zoomingIn = currentZoom < targetZoom;
+        let zoomStep = currentZoom;
+        
+        const zoomInterval = setInterval(() => {
+          if (zoomingIn) {
+            zoomStep += 1;
+            if (zoomStep >= targetZoom) {
+              clearInterval(zoomInterval);
+              map.setZoom(targetZoom);
+              return;
+            }
+          } else {
+            zoomStep -= 1;
+            if (zoomStep <= targetZoom) {
+              clearInterval(zoomInterval);
+              map.setZoom(targetZoom);
+              return;
+            }
+          }
+          map.setZoom(zoomStep);
+        }, 150);
+      }, 300);
+    }
+  }
+}, [map, selectedPOI]);
+
   const handleMapLoad = useCallback((mapInstance) => {
     setMap(mapInstance);
   }, []);
@@ -67,19 +109,12 @@ const MapComponent = () => {
 
   const handleMarkerSave = async (updatedMarker) => {
     try {
-      console.log('Map instance when saving:', map); // Debug log
-      
-      if (!map) {
-        console.log('No map instance available!');
-        return;
-      }
-  
-      // Store current map center and zoom before any state updates
+      if (!map) return;
+
+      // Store current map center and zoom
       const currentCenter = map.getCenter().toJSON();
       const currentZoom = map.getZoom();
-      
-      console.log('Stored map position:', { currentCenter, currentZoom }); // Debug log
-  
+
       const poiData = {
         name: updatedMarker.name,
         latitude: updatedMarker.position.lat,
@@ -87,14 +122,14 @@ const MapComponent = () => {
         description: updatedMarker.description,
         status: updatedMarker.status || 'ACTIVE'
       };
-  
+
       let savedPOI;
       if (updatedMarker.id.toString().startsWith('temp_')) {
         savedPOI = await poiService.createPOI(poiData);
       } else {
         savedPOI = await poiService.updatePOI(updatedMarker.id, poiData);
       }
-  
+
       setMarkers(prev => prev.map(m => 
         m.id === updatedMarker.id ? {
           id: savedPOI.id,
@@ -109,14 +144,12 @@ const MapComponent = () => {
         } : m
       ));
       setSelectedMarker(null);
-  
-      // Add slight delay before restoring map view
+
+      // Restore map view with a slight delay
       setTimeout(() => {
-        console.log('Attempting to restore map view. Map instance:', map); // Debug log
         if (map) {
           map.setCenter(currentCenter);
           map.setZoom(currentZoom);
-          console.log('Map view restored'); // Debug log
         }
       }, 100);
     } catch (error) {
@@ -136,71 +169,9 @@ const MapComponent = () => {
     }
   };
 
-  //test backend connection
-  const testBackendConnection = async () => {
-    console.log('Starting API connection test...');
-    
-    try {
-      // Test 1: Create a POI
-      console.log('Test 1: Creating a new POI...');
-      const newPOI = {
-        name: "Test Location",
-        latitude: 51.5074,  // London coordinates
-        longitude: -0.1278,
-        description: "Test description",
-        status: "ACTIVE"
-      };
-      
-      const createdPOI = await poiService.createPOI(newPOI);
-      console.log('Created POI:', createdPOI);
-      
-      // Test 2: Get all POIs
-      console.log('Test 2: Fetching all POIs...');
-      const allPOIs = await poiService.getAllPOIs();
-      console.log('All POIs:', allPOIs);
-      
-      // Test 3: Create a tag
-      console.log('Test 3: Creating a new tag...');
-      const newTag = { name: `test-tag-${Date.now()}` };
-      const createdTag = await tagService.createTag(newTag);
-      console.log('Created tag:', createdTag);
-      
-      // Test 4: Get all tags
-      console.log('Test 4: Fetching all tags...');
-      const allTags = await tagService.getAllTags();
-      console.log('All tags:', allTags);
-      
-      // Test 5: Update the POI
-      if (createdPOI?.id) {
-        console.log('Test 5: Updating POI...');
-        const updateData = {
-          ...newPOI,
-          name: "Updated Test Location",
-          description: "Updated description"
-        };
-        const updatedPOI = await poiService.updatePOI(createdPOI.id, updateData);
-        console.log('Updated POI:', updatedPOI);
-      }
-      
-      // Test 6: Delete the POI
-      if (createdPOI?.id) {
-        console.log('Test 6: Deleting POI...');
-        await poiService.deletePOI(createdPOI.id);
-        console.log('POI deleted successfully');
-      }
-      
-      console.log('All tests completed successfully!');
-    } catch (error) {
-      console.error('Test failed:', error);
-    }
-  };
-
   if (loadError) return <div>Map cannot be loaded right now, sorry.</div>;
   if (!isLoaded || loading) return <LoadingSpinner />;
-  
 
-
-  // SECTION 2D: Return statement with JSX
   return (
     <div style={{ height: '100vh', width: '100%' }}>
       <GoogleMap
@@ -231,23 +202,6 @@ const MapComponent = () => {
           />
         )}
       </GoogleMap>
-      <button 
-            onClick={testBackendConnection}
-            style={{
-                position: 'fixed',
-                bottom: '20px',
-                right: '20px',
-                padding: '10px 20px',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                zIndex: 1000
-            }}
-        >
-            Test Backend Connection
-        </button>
     </div>
   );
 };
