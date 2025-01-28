@@ -9,15 +9,14 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('search');
   const [pois, setPois] = useState([]);
-  const [filteredPois, setFilteredPois] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedPOI, setSelectedPOI] = useState(null);
   
   useEffect(() => {
     const loadPOIs = async () => {
       try {
         const loadedPois = await poiService.getAllPOIs();
         setPois(loadedPois);
-        setFilteredPois(loadedPois);
       } catch (error) {
         console.error('Error loading POIs:', error);
       }
@@ -26,16 +25,25 @@ const DashboardLayout = () => {
     loadPOIs();
   }, []);
 
-  useEffect(() => {
-    if (selectedTags.length === 0) {
-      setFilteredPois(pois);
-    } else {
-      const filtered = pois.filter(poi => 
-        poi.tags.some(tag => selectedTags.includes(tag.name))
-      );
-      setFilteredPois(filtered);
-    }
-  }, [selectedTags, pois]);
+  const handlePOISelect = (poi) => {
+    setSelectedPOI(poi);
+  };
+
+  const filteredPOIs = pois.filter(poi =>
+    selectedTags.length === 0 || poi.tags.some(tag => selectedTags.includes(tag.name))
+  );
+
+  const markers = filteredPOIs.map(poi => ({
+    id: poi.id,
+    position: {
+      lat: poi.latitude,
+      lng: poi.longitude
+    },
+    name: poi.name,
+    description: poi.description,
+    tags: poi.tags.map(tag => tag.name),
+    status: poi.status
+  }));
 
   return (
     <div className="dashboard-container">
@@ -82,6 +90,7 @@ const DashboardLayout = () => {
                     ? prev.filter(t => t !== tag)
                     : [...prev, tag]
                 )}
+                onPOISelect={handlePOISelect}
               />
             )}
           </div>
@@ -90,17 +99,8 @@ const DashboardLayout = () => {
       
       <div className="map-container">
         <MapComponent 
-          markers={filteredPois.map(poi => ({
-            id: poi.id,
-            position: {
-              lat: poi.latitude,
-              lng: poi.longitude
-            },
-            name: poi.name,
-            description: poi.description,
-            tags: poi.tags.map(tag => tag.name),
-            status: poi.status
-          }))}
+          markers={markers}
+          selectedPOI={selectedPOI}
         />
       </div>
     </div>
