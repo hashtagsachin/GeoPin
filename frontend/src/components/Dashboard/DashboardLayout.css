@@ -30,6 +30,12 @@
     align-items: center;
   }
   
+  .sidebar-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+  
   .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -40,12 +46,13 @@
   .nav-button {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: none;
     background: none;
     cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    color: #4b5563;
   }
   
   .nav-button:hover {
@@ -59,6 +66,7 @@
   
   .nav-button-text {
     margin-left: 0.75rem;
+    font-weight: 500;
   }
   
   .sidebar-content {
@@ -67,7 +75,118 @@
     overflow-y: auto;
   }
   
+  /* New styles for search components */
+  .search-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+  
+  .tag-section {
+    margin-top: 1.5rem;
+  }
+  
+  .tag-section h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+  }
+  
+  .tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .tag-button {
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f3f4f6;
+    color: #4b5563;
+  }
+  
+  .tag-button:hover {
+    background-color: #e5e7eb;
+  }
+  
+  .tag-button.active {
+    background-color: #2563eb;
+    color: white;
+  }
+  
   .map-container {
     flex: 1;
     position: relative;
+  }
+  
+  /* Search results styles */
+  .search-results {
+    margin-top: 1rem;
+  }
+  
+  .poi-card {
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+  }
+  
+  .poi-card:hover {
+    background-color: #f9fafb;
+  }
+  
+  .poi-card h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+  }
+  
+  .poi-card p {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+  }
+  
+  .poi-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .poi-tag {
+    padding: 0.25rem 0.5rem;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-radius: 9999px;
+    font-size: 0.75rem;
   }
