@@ -1,41 +1,40 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
-const SearchPanel = ({ pois, selectedTags, onTagToggle }) => {
+const SearchPanel = ({ pois, selectedTags, onTagToggle, onPOISelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Get unique tags from all POIs
   const allTags = [...new Set(pois.flatMap(poi => 
     poi.tags.map(tag => tag.name)
   ))];
 
+  const filteredPOIs = pois.filter(poi => 
+    (poi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    poi.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (selectedTags.length === 0 || poi.tags.some(tag => selectedTags.includes(tag.name)))
+  );
+
   return (
-    <div className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
+    <div>
+      <div className="search-container">
         <input
           type="text"
           placeholder="Search places..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 pr-8 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="search-input"
         />
-        <Search size={18} className="absolute right-2 top-2.5 text-gray-400" />
+        <Search size={18} className="search-icon" />
       </div>
 
-      {/* Tags Filter */}
-      <div className="space-y-2">
-        <h3 className="font-medium text-gray-700">Filter by tags:</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="tag-section">
+        <h3>Filter by tags:</h3>
+        <div className="tag-container">
           {allTags.map(tag => (
             <button
               key={tag}
               onClick={() => onTagToggle(tag)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                selectedTags.includes(tag)
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`tag-button ${selectedTags.includes(tag) ? 'active' : ''}`}
             >
               {tag}
             </button>
@@ -43,31 +42,27 @@ const SearchPanel = ({ pois, selectedTags, onTagToggle }) => {
         </div>
       </div>
 
-      {/* Search Results */}
-      <div className="space-y-2">
-        {pois
-          .filter(poi => 
-            poi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            poi.description?.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map(poi => (
-            <div key={poi.id} className="p-3 border rounded hover:bg-gray-50">
-              <h3 className="font-medium">{poi.name}</h3>
-              {poi.description && (
-                <p className="text-sm text-gray-600">{poi.description}</p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-1">
-                {poi.tags.map(tag => (
-                  <span
-                    key={tag.name}
-                    className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
+      <div className="search-results">
+        {filteredPOIs.map(poi => (
+          <div 
+            key={poi.id} 
+            className="poi-card"
+            onClick={() => onPOISelect(poi)}
+            style={{ cursor: 'pointer' }}
+          >
+            <h3>{poi.name}</h3>
+            {poi.description && (
+              <p>{poi.description}</p>
+            )}
+            <div className="poi-tags">
+              {poi.tags.map(tag => (
+                <span key={tag.name} className="poi-tag">
+                  {tag.name}
+                </span>
+              ))}
             </div>
-          ))}
+          </div>
+        ))}
       </div>
     </div>
   );
