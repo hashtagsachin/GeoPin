@@ -4,11 +4,12 @@ A personal web application for managing points of interest (POIs) with an intera
 
 ## Screenshots
 
-[Coming soon]
-- Main interface with map and sidebar
-- POI creation/editing interface
-- Search and filtering view
-- Tag management view
+![GeoPin Main Interface](images/main-interface.png)
+*Main interface showing the interactive map with collapsible sidebar for searching and managing POIs in London*
+
+- POI creation/editing interface (coming soon)
+- Search and filtering view (coming soon)
+- Tag management view (coming soon)
 
 ## Features
 
